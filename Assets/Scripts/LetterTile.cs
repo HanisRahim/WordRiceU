@@ -1,38 +1,19 @@
 using UnityEngine;
 using System.Collections;
 
-#if UNITY_UI
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-#endif
-
-#if TMP_PRESENT
-using TMPro;
-#endif
-
 /// <summary>
 /// Letter tile component with click detection and animations
 /// Converted from Godot LetterTile.gd for Unity 6.2+
-/// Compatible with Unity 6.x versions
+/// Simplified version using basic Unity components only
 /// </summary>
 public class LetterTile : MonoBehaviour
-#if UNITY_UI
-    , IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
-#endif
 {
     [Header("Properties")]
     public char Letter { get; private set; } = 'A';
     
     [Header("References")]
-    #if UNITY_UI
-    public UnityEngine.UI.Image backgroundImage;
-    #endif
-    
-    #if TMP_PRESENT
-    public TMPro.TextMeshProUGUI letterLabel;
-    #else
-    public UnityEngine.UI.Text letterLabel;
-    #endif
+    public SpriteRenderer backgroundSprite;
+    public TextMesh letterText;
     
     [Header("Settings")]
     public Vector2 tileSize = new Vector2(80, 80);
@@ -44,9 +25,9 @@ public class LetterTile : MonoBehaviour
     private bool isClickable = true;
 
     // Colors
-    private static readonly Color COLOR_NORMAL = new Color(0.96f, 0.93f, 0.84f, 1f);  // f5ecd7
-    private static readonly Color COLOR_SELECTED = new Color(1f, 0.85f, 0.4f, 1f);    // ffd966
-    private static readonly Color COLOR_TEXT = new Color(0.24f, 0.16f, 0.09f, 1f);     // 3d2817
+    private static readonly Color COLOR_NORMAL = new Color(0.96f, 0.93f, 0.84f, 1f);
+    private static readonly Color COLOR_SELECTED = new Color(1f, 0.85f, 0.4f, 1f);
+    private static readonly Color COLOR_TEXT = new Color(0.24f, 0.16f, 0.09f, 1f);
 
     // Event
     public System.Action<LetterTile> OnTileClicked;
@@ -54,16 +35,16 @@ public class LetterTile : MonoBehaviour
     void Start()
     {
         SetupVisual();
-        originalRotation = UnityEngine.Random.Range(-15f, 15f);
+        originalRotation = Random.Range(-15f, 15f);
         transform.rotation = Quaternion.Euler(0, 0, originalRotation);
     }
 
     public void SetLetter(char letter)
     {
         Letter = letter;
-        if (letterLabel != null)
+        if (letterText != null)
         {
-            letterLabel.text = letter.ToString();
+            letterText.text = letter.ToString();
         }
     }
 
@@ -74,77 +55,54 @@ public class LetterTile : MonoBehaviour
 
     void SetupVisual()
     {
-        #if UNITY_UI
-        if (backgroundImage != null)
+        if (backgroundSprite != null)
         {
-            backgroundImage.color = COLOR_NORMAL;
+            backgroundSprite.color = COLOR_NORMAL;
         }
-        #endif
 
-        if (letterLabel != null)
+        if (letterText != null)
         {
-            letterLabel.text = Letter.ToString();
-            
-            #if TMP_PRESENT
-            letterLabel.fontSize = 42;
-            letterLabel.color = COLOR_TEXT;
-            letterLabel.alignment = TMPro.TextAlignmentOptions.Center;
-            #else
-            letterLabel.fontSize = 42;
-            letterLabel.color = COLOR_TEXT;
-            letterLabel.alignment = TextAnchor.MiddleCenter;
-            #endif
+            letterText.text = Letter.ToString();
+            letterText.fontSize = 42;
+            letterText.color = COLOR_TEXT;
+            letterText.anchor = TextAnchor.MiddleCenter;
+            letterText.alignment = TextAlignment.Center;
         }
     }
 
-    #if UNITY_UI
-    public void OnPointerClick(UnityEngine.EventSystems.PointerEventData eventData)
+    // Basic Unity click detection (works without UI package)
+    void OnMouseDown()
     {
-        // Check if clickable (VS mode uses this for AI tiles)
         if (!isClickable || isSelected || isFlying)
             return;
 
         OnTileClicked?.Invoke(this);
     }
 
-    public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData eventData)
+    void OnMouseEnter()
     {
         if (!isClickable || isSelected || isFlying)
             return;
 
         transform.localScale = Vector3.one * 1.1f;
-        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); // Can set custom cursor
     }
 
-    public void OnPointerExit(UnityEngine.EventSystems.PointerEventData eventData)
+    void OnMouseExit()
     {
         if (!isClickable || isSelected || isFlying)
             return;
 
         transform.localScale = Vector3.one;
     }
-    #endif
-    
-    // Alternative: Use OnMouseDown for basic Unity (when UI package not installed)
-    void OnMouseDown()
-    {
-        #if !UNITY_UI
-        if (!isClickable || isSelected || isFlying)
-            return;
-        OnTileClicked?.Invoke(this);
-        #endif
-    }
 
     public void MarkAsSelected()
     {
         isSelected = true;
         
-        #if UNITY_UI
-        if (backgroundImage != null)
+        if (backgroundSprite != null)
         {
-            backgroundImage.color = COLOR_SELECTED;
+            backgroundSprite.color = COLOR_SELECTED;
         }
-        #endif
         
         transform.rotation = Quaternion.identity;
         transform.localScale = Vector3.one * 1.05f;
@@ -193,14 +151,18 @@ public class LetterTile : MonoBehaviour
             transform.localScale = Vector3.Lerp(startScale, Vector3.one * 0.9f, t);
             
             // Fade out
-            #if UNITY_UI
-            if (backgroundImage != null)
+            if (backgroundSprite != null)
             {
-                Color col = backgroundImage.color;
+                Color col = backgroundSprite.color;
                 col.a = Mathf.Lerp(1f, 0.5f, t);
-                backgroundImage.color = col;
+                backgroundSprite.color = col;
             }
-            #endif
+            if (letterText != null)
+            {
+                Color col = letterText.color;
+                col.a = Mathf.Lerp(1f, 0.5f, t);
+                letterText.color = col;
+            }
 
             elapsed += Time.deltaTime;
             yield return null;
@@ -209,4 +171,3 @@ public class LetterTile : MonoBehaviour
         gameObject.SetActive(false);
     }
 }
-
