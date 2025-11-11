@@ -1,22 +1,38 @@
 using UnityEngine;
+using System.Collections;
+
+#if UNITY_UI
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+#endif
+
+#if TMP_PRESENT
 using TMPro;
-using System.Collections;
+#endif
 
 /// <summary>
 /// Letter tile component with click detection and animations
 /// Converted from Godot LetterTile.gd for Unity 6.2+
 /// Compatible with Unity 6.x versions
 /// </summary>
-public class LetterTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class LetterTile : MonoBehaviour
+#if UNITY_UI
+    , IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+#endif
 {
     [Header("Properties")]
     public char Letter { get; private set; } = 'A';
     
     [Header("References")]
-    public Image backgroundImage;
-    public TextMeshProUGUI letterLabel;
+    #if UNITY_UI
+    public UnityEngine.UI.Image backgroundImage;
+    #endif
+    
+    #if TMP_PRESENT
+    public TMPro.TextMeshProUGUI letterLabel;
+    #else
+    public UnityEngine.UI.Text letterLabel;
+    #endif
     
     [Header("Settings")]
     public Vector2 tileSize = new Vector2(80, 80);
@@ -58,21 +74,31 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
     void SetupVisual()
     {
+        #if UNITY_UI
         if (backgroundImage != null)
         {
             backgroundImage.color = COLOR_NORMAL;
         }
+        #endif
 
         if (letterLabel != null)
         {
             letterLabel.text = Letter.ToString();
+            
+            #if TMP_PRESENT
             letterLabel.fontSize = 42;
             letterLabel.color = COLOR_TEXT;
-            letterLabel.alignment = TextAlignmentOptions.Center;
+            letterLabel.alignment = TMPro.TextAlignmentOptions.Center;
+            #else
+            letterLabel.fontSize = 42;
+            letterLabel.color = COLOR_TEXT;
+            letterLabel.alignment = TextAnchor.MiddleCenter;
+            #endif
         }
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    #if UNITY_UI
+    public void OnPointerClick(UnityEngine.EventSystems.PointerEventData eventData)
     {
         // Check if clickable (VS mode uses this for AI tiles)
         if (!isClickable || isSelected || isFlying)
@@ -81,7 +107,7 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         OnTileClicked?.Invoke(this);
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData eventData)
     {
         if (!isClickable || isSelected || isFlying)
             return;
@@ -90,21 +116,36 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); // Can set custom cursor
     }
 
-    public void OnPointerExit(PointerEventData eventData)
+    public void OnPointerExit(UnityEngine.EventSystems.PointerEventData eventData)
     {
         if (!isClickable || isSelected || isFlying)
             return;
 
         transform.localScale = Vector3.one;
     }
+    #endif
+    
+    // Alternative: Use OnMouseDown for basic Unity (when UI package not installed)
+    void OnMouseDown()
+    {
+        #if !UNITY_UI
+        if (!isClickable || isSelected || isFlying)
+            return;
+        OnTileClicked?.Invoke(this);
+        #endif
+    }
 
     public void MarkAsSelected()
     {
         isSelected = true;
+        
+        #if UNITY_UI
         if (backgroundImage != null)
         {
             backgroundImage.color = COLOR_SELECTED;
         }
+        #endif
+        
         transform.rotation = Quaternion.identity;
         transform.localScale = Vector3.one * 1.05f;
     }
@@ -152,12 +193,14 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
             transform.localScale = Vector3.Lerp(startScale, Vector3.one * 0.9f, t);
             
             // Fade out
+            #if UNITY_UI
             if (backgroundImage != null)
             {
                 Color col = backgroundImage.color;
                 col.a = Mathf.Lerp(1f, 0.5f, t);
                 backgroundImage.color = col;
             }
+            #endif
 
             elapsed += Time.deltaTime;
             yield return null;

@@ -1,5 +1,8 @@
 using UnityEngine;
+
+#if UNITY_UI
 using UnityEngine.UI;
+#endif
 
 /// <summary>
 /// Rice grain particle with physics simulation
@@ -17,7 +20,11 @@ public class RiceParticle : MonoBehaviour
     private float elapsedTime = 0f;
 
     [Header("Visual")]
-    public Image particleImage;  // Or SpriteRenderer for 2D sprites
+    #if UNITY_UI
+    public UnityEngine.UI.Image particleImage;  // Or use SpriteRenderer
+    #else
+    public SpriteRenderer particleSprite;  // Fallback to SpriteRenderer
+    #endif
 
     void Start()
     {
@@ -29,10 +36,17 @@ public class RiceParticle : MonoBehaviour
         transform.localScale = Vector3.one * sizeVariation;
 
         // Set pure white color
+        #if UNITY_UI
         if (particleImage != null)
         {
             particleImage.color = Color.white;
         }
+        #else
+        if (particleSprite != null)
+        {
+            particleSprite.color = Color.white;
+        }
+        #endif
 
         // Auto-destroy after lifetime
         Destroy(gameObject, lifetime);
@@ -60,12 +74,21 @@ public class RiceParticle : MonoBehaviour
             float fadeProgress = (elapsedTime - fadeStart) / (lifetime - fadeStart);
             float alpha = 1f - (fadeProgress * 0.6f);  // Only fade to 40% min
 
+            #if UNITY_UI
             if (particleImage != null)
             {
                 Color col = particleImage.color;
                 col.a = alpha;
                 particleImage.color = col;
             }
+            #else
+            if (particleSprite != null)
+            {
+                Color col = particleSprite.color;
+                col.a = alpha;
+                particleSprite.color = col;
+            }
+            #endif
         }
     }
 

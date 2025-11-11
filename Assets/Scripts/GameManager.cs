@@ -1,8 +1,14 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+
+#if UNITY_UI
+using UnityEngine.UI;
+#endif
+
+#if TMP_PRESENT
+using TMPro;
+#endif
 
 /// <summary>
 /// Main game manager for Solo mode gameplay
@@ -12,9 +18,17 @@ using System.Collections.Generic;
 public class GameManager : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI timerLabel;
-    public TextMeshProUGUI scoreLab;
-    public Slider progressBar;
+    #if TMP_PRESENT
+    public TMPro.TextMeshProUGUI timerLabel;
+    public TMPro.TextMeshProUGUI scoreLabel;
+    #else
+    public UnityEngine.UI.Text timerLabel;
+    public UnityEngine.UI.Text scoreLabel;
+    #endif
+    
+    #if UNITY_UI
+    public UnityEngine.UI.Slider progressBar;
+    #endif
     public Transform taskDisplayParent;
     public Transform letterPoolParent;
     public Transform particleParent;
@@ -80,17 +94,27 @@ public class GameManager : MonoBehaviour
             GameObject slot = new GameObject($"TaskSlot_{i}");
             slot.transform.SetParent(taskDisplayParent);
             
-            // Add UI components for slot display
-            Image slotImage = slot.AddComponent<Image>();
+            // Add UI components for slot display (requires UI package)
+            #if UNITY_UI
+            UnityEngine.UI.Image slotImage = slot.AddComponent<UnityEngine.UI.Image>();
             slotImage.color = HexToColor("f5ecd7");
+            #endif
             
             // Add label
             GameObject labelObj = new GameObject("Label");
             labelObj.transform.SetParent(slot.transform);
-            TextMeshProUGUI label = labelObj.AddComponent<TextMeshProUGUI>();
+            
+            #if TMP_PRESENT
+            TMPro.TextMeshProUGUI label = labelObj.AddComponent<TMPro.TextMeshProUGUI>();
             label.fontSize = 48;
-            label.alignment = TextAlignmentOptions.Center;
+            label.alignment = TMPro.TextAlignmentOptions.Center;
             label.color = HexToColor("3d2817");
+            #else
+            UnityEngine.UI.Text label = labelObj.AddComponent<UnityEngine.UI.Text>();
+            label.fontSize = 48;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = HexToColor("3d2817");
+            #endif
             
             taskSlots.Add(slot);
         }
@@ -103,7 +127,12 @@ public class GameManager : MonoBehaviour
         // Display task in slots
         for (int i = 0; i < 4; i++)
         {
-            var label = taskSlots[i].GetComponentInChildren<TextMeshProUGUI>();
+            #if TMP_PRESENT
+            var label = taskSlots[i].GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            #else
+            var label = taskSlots[i].GetComponentInChildren<UnityEngine.UI.Text>();
+            #endif
+            
             if (label != null)
             {
                 label.text = task[i].ToString();
@@ -337,10 +366,18 @@ public class GameManager : MonoBehaviour
         }
 
         // Progress bar
-        progressBar.value = (GlobalData.Instance.timeLeft / GAME_TIME) * 100f;
+        #if UNITY_UI
+        if (progressBar != null)
+        {
+            progressBar.value = (GlobalData.Instance.timeLeft / GAME_TIME) * 100f;
+        }
+        #endif
 
         // Score
-        scoreLabel.text = GlobalData.Instance.currentScore.ToString("000");
+        if (scoreLabel != null)
+        {
+            scoreLabel.text = GlobalData.Instance.currentScore.ToString("000");
+        }
     }
 
     void SpawnRiceParticles(Vector3 position, int count)
@@ -383,25 +420,32 @@ public class GameManager : MonoBehaviour
 
     IEnumerator FlashProgressBarGreen()
     {
-        Image fillImage = progressBar.fillRect.GetComponent<Image>();
-        if (fillImage != null)
+        #if UNITY_UI
+        if (progressBar != null && progressBar.fillRect != null)
         {
-            Color originalColor = fillImage.color;
-            Color greenColor = new Color(0.145f, 0.867f, 0.294f, 1f);
-            
-            // Flash to green
-            fillImage.color = greenColor;
-            yield return new WaitForSeconds(0.35f);
-            
-            // Fade back
-            float elapsed = 0f;
-            while (elapsed < 1f)
+            UnityEngine.UI.Image fillImage = progressBar.fillRect.GetComponent<UnityEngine.UI.Image>();
+            if (fillImage != null)
             {
-                elapsed += Time.deltaTime;
-                fillImage.color = Color.Lerp(greenColor, originalColor, elapsed);
-                yield return null;
+                Color originalColor = fillImage.color;
+                Color greenColor = new Color(0.145f, 0.867f, 0.294f, 1f);
+                
+                // Flash to green
+                fillImage.color = greenColor;
+                yield return new WaitForSeconds(0.35f);
+                
+                // Fade back
+                float elapsed = 0f;
+                while (elapsed < 1f)
+                {
+                    elapsed += Time.deltaTime;
+                    fillImage.color = Color.Lerp(greenColor, originalColor, elapsed);
+                    yield return null;
+                }
             }
         }
+        #else
+        yield return null;
+        #endif
     }
 
     void EndGame()
@@ -426,11 +470,13 @@ public class GameManager : MonoBehaviour
     void MarkSlotFilled(int index)
     {
         // Mark slot as filled with golden color
-        Image slotImage = taskSlots[index].GetComponent<Image>();
+        #if UNITY_UI
+        UnityEngine.UI.Image slotImage = taskSlots[index].GetComponent<UnityEngine.UI.Image>();
         if (slotImage != null)
         {
             slotImage.color = HexToColor("ffd966");
         }
+        #endif
     }
 
     // Utility method to convert hex to Color
