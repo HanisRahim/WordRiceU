@@ -1,0 +1,64 @@
+WORD RICE - UNITY 6.2 VERSION
+==============================
+
+WHAT'S INCLUDED:
+----------------
+✅ Assets/Scripts/ folder with 4 converted C# scripts
+✅ Complete documentation (5 markdown files)
+✅ Project folder structure ready
+✅ Setup instructions
+
+CORE SCRIPTS PROVIDED (Unity 6.2+ Compatible):
+----------------------------------------------
+1. GlobalData.cs      - Singleton game state manager
+2. GameManager.cs     - Solo mode gameplay controller  
+3. LetterTile.cs      - Letter tile component
+4. RiceParticle.cs    - Rice particle effect
+
+WHAT YOU NEED TO DO:
+--------------------
+1. Install Unity Hub + Unity 6.2
+2. Create new 2D project in this folder
+3. Build UI in Unity Editor
+4. Create prefabs
+5. Setup scenes
+6. Convert remaining 5 scripts
+7. Test and build
+
+START HERE:
+-----------
+1. Read: UNITY_SETUP_GUIDE.md (detailed instructions)
+2. Read: CONVERSION_STATUS.md (see progress)
+3. Follow the guide step-by-step
+
+ESTIMATED TIME:
+---------------
+15-20 hours of Unity Editor work
+
+WHY UNITY EDITOR IS REQUIRED:
+------------------------------
+Unity projects CANNOT be created via command line.
+Must use Unity 6.2 Editor for:
+- Scene file creation
+- UI building
+- Prefab setup
+- Component configuration
+- Testing
+
+ALTERNATIVE:
+------------
+The Godot version is 100% complete:
+- Fully playable
+- Exported to Windows .exe
+- Professional and polished
+- Located in: Godot-Version/
+
+QUESTIONS?
+----------
+Check UNITY_SETUP_GUIDE.md for answers!
+
+---
+Muhammad Hanis
+Todak Studios
+November 2025
+
